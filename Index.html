@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Voting Eligibility Checker</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --accent:#1257a6;
+    --muted:#6b7280;
+    --ok:#0f9d58;
+    --bad:#d23f3f;
+  }
+  body{
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, var(--bg), #eef3fb);
+    margin:0;
+    padding:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .card{
+    width:100%;
+    max-width:760px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 6px 22px rgba(10,20,40,0.08);
+    padding:22px;
+  }
+  h1{margin:0 0 8px 0;font-size:1.35rem}
+  p.lead{margin:0 0 18px;color:var(--muted)}
+  form{display:grid;gap:12px}
+  .row{display:flex;gap:12px}
+  .col{flex:1;display:flex;flex-direction:column;gap:6px}
+  label{font-weight:600;font-size:0.9rem}
+  input[type="text"], input[type="date"], select, input[type="number"]{
+    padding:10px 12px;border-radius:8px;border:1px solid #d7dce6;font-size:0.95rem;background:#fafbff;
+  }
+  .small{font-size:0.85rem;color:var(--muted)}
+  .actions{display:flex;gap:8px;align-items:center;margin-top:6px}
+  button{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+  .btn-ghost{background:transparent;border:1px solid #e3e7ee;color:var(--accent);font-weight:700}
+  .result{margin-top:14px;padding:12px;border-radius:10px}
+  .result.ok{background:#edf7ee;color:var(--ok);border:1px solid rgba(15,157,88,0.12)}
+  .result.bad{background:#fff2f2;color:var(--bad);border:1px solid rgba(210,63,63,0.12)}
+  .help{font-size:0.85rem;color:var(--muted)}
+  @media (max-width:600px){
+    .row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="pageTitle">
+    <h1 id="pageTitle">Voting Eligibility Checker</h1>
+    <p class="lead">Enter your details below — the system will check basic eligibility rules (age, citizenship, ID). This is a demo; final authority is your local election office.</p>
+
+    <form id="eligForm" novalidate>
+      <div class="row">
+        <div class="col">
+          <label for="fullName">Full name</label>
+          <input id="fullName" name="fullName" type="text" placeholder="e.g. Varshini Avagadda" required />
+          <div class="small" id="nameHelp">As on your official ID.</div>
+        </div>
+        <div class="col">
+          <label for="dob">Date of birth</label>
+          <input id="dob" name="dob" type="date" required aria-describedby="ageHelp" />
+          <div class="small" id="ageHelp">You must be 18 years or older to be eligible.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="citizenship">Citizenship</label>
+          <select id="citizenship" name="citizenship" required>
+            <option value="">Select country</option>
+            <option value="India">India</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="small">Select your country of citizenship.</div>
+        </div>
+
+        <div class="col">
+          <label for="idType">ID type</label>
+          <select id="idType" name="idType" required>
+            <option value="">Select ID</option>
+            <option value="Aadhaar">Aadhaar</option>
+            <option value="VoterID">Voter ID</option>
+            <option value="Passport">Passport</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="small">Choose the document you will use as ID.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="idNumber">ID number</label>
+          <input id="idNumber" name="idNumber" type="text" placeholder="Enter ID number" required />
+          <div class="small">We only validate presence and basic format here (demo).</div>
+        </div>
+
+        <div class="col">
+          <label for="residence">Are you currently resident in constituency?</label>
+          <select id="residence" name="residence" required>
+            <option value="">Choose</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+          <div class="small">Local residency may be required to register in a constituency.</div>
+        </div>
+      </div>
+
+      <div>
+        <label>Disqualification checks</label>
+        <div class="small" style="margin-bottom:8px">Tick to confirm none apply to you.</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <label><input id="notConvicted" type="checkbox" /> I am not currently convicted of a disqualifying offense</label>
+          <label><input id="notDeclaredIncompetent" type="checkbox" /> I am not legally declared incompetent</label>
+          <label><input id="notDeprived" type="checkbox" /> I have not been deprived of voting rights by a court</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Check Eligibility</button>
+        <button type="button" class="btn-ghost" id="resetBtn">Reset</button>
+        <div style="margin-left:auto" class="help">Demo — rules are configurable.</div>
+      </div>
+    </form>
+
+    <div id="output" aria-live="polite"></div>
+
+    <hr style="margin:18px 0" />
+    <section>
+      <h2 style="font-size:1rem;margin:0 0 6px 0">About (developer notes)</h2>
+      <p class="small">This demo runs rules on the client side. In production you would:
+        <ol style="padding-left:18px;margin:6px 0 0 0">
+          <li>Keep rules in a versioned config (JSON) stored in a repository (rules can change without code deploy).</li>
+          <li>Run server-side validation and audits, use secure ID verification services, and log decisions for compliance.</li>
+        </ol>
+      </p>
+    </section>
+  </main>
+
+<script>
+/*
+  Eligibility rules are in a single object so they can be changed or fetched from a config file
+  Example: fetch('/config/eligibility-rules.json') in a production app.
+*/
+const RULES = {
+  minAge: 18,
+  requiredCitizenship: 'India', // demo assumes India; make this dynamic for multi-country support
+  requireResidency: true, // demo flag
+  requiredIdTypes: ['Aadhaar', 'VoterID', 'Passport', 'Other']
+};
+
+function calculateAge(dobStr) {
+  if (!dobStr) return null;
+  const dob = new Date(dobStr);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+function simpleIdFormatCheck(idType, idNumber) {
+  if (!idNumber) return false;
+  // Simple heuristics for demonstration. Replace with robust patterns or API checks in prod.
+  const s = idNumber.trim();
+  if (idType === 'Aadhaar') return /^\d{12}$/.test(s); // 12 digits
+  if (idType === 'VoterID') return /^[A-Za-z0-9]{6,15}$/.test(s);
+  if (idType === 'Passport') return /^[A-Za-z0-9]{6,9}$/.test(s);
+  return s.length >= 4;
+}
+
+document.getElementById('eligForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const fullName = document.getElementById('fullName').value.trim();
+  const dob = document.getElementById('dob').value;
+  const citizenship = document.getElementById('citizenship').value;
+  const idType = document.getElementById('idType').value;
+  const idNumber = document.getElementById('idNumber').value.trim();
+  const residence = document.getElementById('residence').value;
+  const notConvicted = document.getElementById('notConvicted').checked;
+  const notDeclaredIncompetent = document.getElementById('notDeclaredIncompetent').checked;
+  const notDeprived = document.getElementById('notDeprived').checked;
+
+  const age = calculateAge(dob);
+  const messages = [];
+
+  // Basic required fields
+  if (!fullName) messages.push('Please enter your full name.');
+  if (!dob) messages.push('Please provide date of birth.');
+  if (!citizenship) messages.push('Please select your citizenship.');
+  if (!idType) messages.push('Please select an ID type.');
+  if (!idNumber) messages.push('Please enter the ID number.');
+  if (!residence) messages.push('Please indicate your residency status.');
+
+  // If missing basic fields, show errors early
+  if (messages.length > 0) {
+    showResult(false, messages.join(' '));
+    return;
+  }
+
+  // Rule checks
+  if (age === null || isNaN(age)) {
+    messages.push('Invalid date of birth.');
+  } else if (age < RULES.minAge) {
+    messages.push(`You are ${age} years old. Minimum required age is ${RULES.minAge}.`);
+  }
+
+  if (RULES.requiredCitizenship && citizenship !== RULES.requiredCitizenship) {
+    messages.push(`This portal checks ${RULES.requiredCitizenship} citizenship. Your citizenship: ${citizenship}.`);
+  }
+
+  if (RULES.require
